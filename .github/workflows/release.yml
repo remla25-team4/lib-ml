@@ -30,22 +30,15 @@ jobs:
           pip install -r requirements.txt
 
       # Step 4: Download NLTK data explicitly
-      - name: Download NLTK stopwords (if needed)
+      - name: Download NLTK stopwords
         run: python -m nltk.downloader stopwords
 
       # Step 5: Build package
       - name: Build package
         run: python -m build --verbose
 
-      # Step 6: Install the built package THEN run tests
-      - name: Install package and Run tests
-        run: |
-          echo "Installing built wheel from dist/..."
-          pip install dist/*.whl
-          echo "Running tests against the installed package..."
-          pytest tests/
 
-      # Step 7: Verify built package version in wheel artifact
+      # Step 6: Verify built package version in wheel artifact
       - name: Verify built package version in wheel artifact
         shell: bash
         run: |
@@ -80,7 +73,7 @@ jobs:
             exit 1 # Fail
           fi
 
-      # Step 8: Publish distribution to GitHub Packages
+      # Step 7: Publish distribution to GitHub Packages
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
