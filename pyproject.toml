@@ -24,13 +24,11 @@ classifiers = [ # Standard classifiers for PyPI visibility (good practice)
 dependencies = [
     "nltk>=3.6",
     "scikit-learn>=1.0",
-     "pandas>=1.3",
 ]
 
 # --- Tool Configurations ---
 [tool.setuptools_scm]
-# Configures setuptools_scm to get version from Git tags
-# and write it to a file for runtime access (__version__)
+# automatically write the version to src/lib_ml/_version.py on build.
 write_to = "src/lib_ml/_version.py"
 local_scheme = "no-local-version"
 version_scheme = "guess-next-dev"

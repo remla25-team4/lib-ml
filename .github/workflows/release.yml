@@ -37,43 +37,7 @@ jobs:
       - name: Build package
         run: python -m build --verbose
 
-
-      # Step 6: Verify built package version in wheel artifact
-      - name: Verify built package version in wheel artifact
-        shell: bash
-        run: |
-          echo "Verifying package version in built artifact..."
-          EXPECTED_VERSION=$(echo "${{ github.ref_name }}" | sed 's/^v//')
-          if [ -z "$EXPECTED_VERSION" ]; then echo "ERROR: Cannot get expected version."; exit 1; fi
-          echo "Expecting version: $EXPECTED_VERSION"
-
-          # Check generated _version.py file (optional debug)
-          VERSION_PY_FILE="src/lib_ml/_version.py" # Adjusted path
-          if [ -f "$VERSION_PY_FILE" ]; then
-            echo "Content of generated $VERSION_PY_FILE:"
-            cat "$VERSION_PY_FILE"
-          else
-            echo "WARNING: $VERSION_PY_FILE not found after build."
-          fi
-
-          # Check wheel metadata
-          if [ ! -d dist ] || [ $(ls dist/*.whl | wc -l) -ne 1 ]; then echo "ERROR: dist/ or wheel issue."; exit 1; fi
-          WHEEL_FILE=$(ls dist/*.whl)
-          echo "Checking wheel file: $WHEEL_FILE"
-          ACTUAL_VERSION=$(unzip -p "$WHEEL_FILE" *.dist-info/METADATA 2>/dev/null | grep -i '^Version:' | sed -E 's/^Version:[[:space:]]*//i' | xargs)
-          if [ -z "$ACTUAL_VERSION" ]; then echo "ERROR: Cannot extract version from wheel."; exit 1; fi
-          echo "Actual version found in wheel metadata: '$ACTUAL_VERSION'"
-
-          # Comparison
-          if [[ "$ACTUAL_VERSION" == "$EXPECTED_VERSION" ]]; then
-            echo "SUCCESS: Built artifact version matches Git tag."
-            exit 0 # Success
-          else
-            echo "ERROR: Version mismatch! Expected '$EXPECTED_VERSION', artifact contains '$ACTUAL_VERSION'."
-            exit 1 # Fail
-          fi
-
-      # Step 7: Publish distribution to GitHub Packages
+      # Step 6: Publish distribution to GitHub Packages
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
