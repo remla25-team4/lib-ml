@@ -4,11 +4,11 @@
 
 ## Overview
 
-`lib-ml` is a Python library created as part of the REMLA `Restaurant Sentiment Analysis` application (Assignment 1: Versions, Releases, and Containerization).
+`lib-ml` is a Python library created as part of the REMLA `Restaurant Sentiment Analysis` application.
 
 Its purpose is to encapsulate the common machine learning preprocessing logic required for the restaurant sentiment analysis task. This ensures consistency between the model training pipeline (`model-training`) and the prediction service (`model-service`), both of which depend on this library.
 
-Currently, it provides functions for cleaning and preparing text data.
+Currently, it provides functions for preprocessing review (text) data.
 
 ## How it Works
 
@@ -53,5 +53,5 @@ from lib_ml.preprocessing import preprocess
 
 reviews = dataset['Review']
 processed_corpus = preprocess(reviews)
-now use processed_corpus with CountVectorizer...
+# now use processed_corpus with CountVectorizer...
 ```
