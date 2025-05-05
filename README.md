@@ -38,7 +38,7 @@ pip install git+https://github.com/remla25-team4/lib-ml.git@v<tag-name>
 # Replace <tag_name> with the desired release tag (e.g., v0.1.0). 
 
 # Or
-# git+https://github.com/remla25-team4/lib-ml.git@v0.1.0
+# lib-ml @ git+https://github.com/remla25-team4/lib-ml.git@v0.1.0 
 # You can add this line to the requirements.txt file of your project.
 
 ```
