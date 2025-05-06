@@ -1,0 +1,37 @@
+[build-system]
+# Define build tools and backend, including setuptools_scm
+requires = ["setuptools>=61.0", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+# --- Core Project Metadata ---
+name = "lib-ml"
+dynamic = ["version"]
+description = "ML preprocessing library for Restaurant Sentiment Analysis (REMLA)"
+readme = "README.md"
+requires-python = ">=3.8" # Specify your minimum supported Python version
+license = { file = "LICENSE" } # Assumes MIT license file named LICENSE
+authors = [
+    { name = "Yulin Chen", email = "y.chen-112@student.tudelft.nl" },
+]
+classifiers = [ # Standard classifiers for PyPI visibility (good practice)
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+]
+
+# --- Runtime Dependencies ---
+dependencies = [
+    "nltk>=3.6",
+    "scikit-learn>=1.0",
+]
+
+# --- Tool Configurations ---
+[tool.setuptools_scm]
+# automatically write the version to src/lib_ml/_version.py on build.
+write_to = "src/lib_ml/_version.py"
+local_scheme = "no-local-version"
+version_scheme = "guess-next-dev"
+
+[tool.setuptools.packages.find]
+where = ["src"]

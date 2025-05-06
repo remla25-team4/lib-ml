@@ -1,0 +1,17 @@
+/remla
+/.idea
+/src/lib_version/__pycache__
+.egg-info/
+
+src/lib_version/_version.py
+src/lib_ml.egg-info
+
+*.egg-info/
+build/
+dist/
+
+__pycache__/
+*.py[cod]
+*$py.class
+*.swp
+.DS_Store
