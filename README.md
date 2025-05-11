@@ -28,19 +28,15 @@ The library's version is automatically determined from Git tags using `setuptool
 
 This library is intended to be installed directly from its Git tag using `pip`. It is **not** published to any public package registries like PyPI.
 
-To install a specific version (e.g., `v0.1.0`) as a dependency in another component (like `model-training` or `model-service`):
+To install a specific version (e.g., `v0.1.1`) as a dependency in another component (like `model-training` or `model-service`):
 
 ```bash
-pip install git+https://github.com/remla25-team4/lib-ml.git@v<tag-name>
-
-# Example:
-# pip install git+https://github.com/remla25-team4/lib-ml.git@v0.1.0
-# Replace <tag_name> with the desired release tag (e.g., v0.1.0). 
+pip install https://github.com/remla25-team4/lib-ml/releases/download/v0.1.1/lib_ml-0.1.1-py3-none-any.whl
 
 # Or
-# git+https://github.com/remla25-team4/lib-ml.git@v0.1.0
+# lib_ml @ https://github.com/remla25-team4/lib-ml/releases/download/v0.1.1/lib_ml-0.1.1-py3-none-any.whl
 # You can add this line to the requirements.txt file of your project.
-
+# Then run pip install -r requirements.txt to install
 ```
 
 ## Usage

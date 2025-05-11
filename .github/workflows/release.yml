@@ -43,3 +43,19 @@ jobs:
         with:
           name: libml-dist
           path: dist/
+
+      # Step 7: Create GitHub Release and attach distribution files from dist/
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: success()
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          body: |
+            Automated release for version ${{ github.ref_name }}
+          # This will upload the .whl and .tar.gz files (if python -m build creates both).
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
