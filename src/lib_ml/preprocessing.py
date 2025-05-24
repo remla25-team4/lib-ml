@@ -17,11 +17,8 @@ def preprocess(reviews: list[str]) -> list[str]:
     """
     corpus = []
 
-    # NOTE: Consider handling NLTK download outside this function
-    try:
-        nltk.data.find('corpora/stopwords')
-    except (nltk.downloader.DownloadError, LookupError):
-        nltk.download('stopwords', quiet=True)
+    nltk.download('stopwords', quiet=True)
+    nltk.download('wordnet', quiet=True)
 
     ps = PorterStemmer()
     all_stopwords = stopwords.words('english')
