@@ -17,6 +17,9 @@ def preprocess(reviews: list[str]) -> list[str]:
     """
     corpus = []
 
+    nltk.download('stopwords')
+    nltk.download('wordnet')
+
     # NOTE: Consider handling NLTK download outside this function
     try:
         nltk.data.find('corpora/stopwords')
