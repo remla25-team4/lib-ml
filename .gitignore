@@ -5,6 +5,7 @@
 
 src/lib_version/_version.py
 src/lib_ml.egg-info
+src/lib_ml/_version.py
 
 *.egg-info/
 build/
