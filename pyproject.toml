@@ -31,7 +31,6 @@ dependencies = [
 # automatically write the version to src/lib_ml/_version.py on build.
 write_to = "src/lib_ml/_version.py"
 local_scheme = "no-local-version"
-version_scheme = "guess-next-dev"
 
 [tool.setuptools.packages.find]
 where = ["src"]
