@@ -5,16 +5,14 @@ on:
     branches:
       - main
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+*'  # e.g. v1.2.3 or v1.2.3-alpha.1
 
 jobs:
   build-verify-prerelease:
     name: Build, Verify, and Pre-release lib-ml
     runs-on: ubuntu-latest
     permissions:
-      contents: write   
-      packages: write    
-      id-token: write
+      contents: write   # for pushing tags & creating the prerelease
 
     steps:
       - name: Checkout code
@@ -22,58 +20,57 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Determine trigger type
-        id: trigger
-        run: |
-          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            echo "triggered_by=tag" >> $GITHUB_OUTPUT
-          else
-            echo "triggered_by=branch" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Get latest stable tag
-        run: |
-          # On branch: look up last tag; on tag: use that tag
-          if [[ "${{ steps.trigger.outputs.triggered_by }}" == "branch" ]]; then
-            LATEST=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          else
-            LATEST="${{ github.ref_name }}"
-          fi
-          echo "LATEST_TAG=$LATEST" >> $GITHUB_ENV
-
-      - name: Calculate pre-release version
-        run: |
-          BASE=${LATEST_TAG#v}
-          BASE=${BASE%%-pre*}
-          IFS=. read MAJOR MINOR PATCH <<< "$BASE"
-
-          # Automatic patch bump for prerelease
-          PATCH=$((PATCH + 1))
-          TS=$(date +%Y%m%d.%H%M%S)
-          PREVER="$MAJOR.$MINOR.$PATCH-pre.$TS"
-
-          echo "VERSION=$PREVER"        >> $GITHUB_ENV
-          echo "VERSION_MAJOR=$MAJOR"   >> $GITHUB_ENV
-          echo "VERSION_MINOR=$MINOR"   >> $GITHUB_ENV
-          echo "VERSION_PATCH=$PATCH"   >> $GITHUB_ENV
-
-      - name: Tag pre-release
-        run: |
-          git config --global user.name  "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          # Tag the main tip (or the commit that just got tagged) with our new prerelease
-          git fetch origin main
-          SHA=origin/main
-          if [[ "${{ steps.trigger.outputs.triggered_by }}" == "tag" ]]; then
-            SHA="${{ github.sha }}"
-          fi
-          git tag "v${{ env.VERSION }}" $SHA
-          git push origin "v${{ env.VERSION }}"
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.13'
+
+      - name: Determine trigger type
+        id: trigger
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "by_tag=true"  >> $GITHUB_OUTPUT
+          else
+            echo "by_tag=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Calculate prerelease version
+        run: |
+          # Pick the base tag: pushed tag vs. latest in history
+          if [ "${{ steps.trigger.outputs.by_tag }}" = "true" ]; then
+            BASE_TAG="${{ github.ref_name }}"
+          else
+            BASE_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          fi
+
+          # Strip leading 'v' and drop any '-' suffix (e.g. '-alpha', '-pre', etc)
+          BASE=${BASE_TAG#v}
+          BASE=${BASE%%-*}
+
+          # Split into MAJOR, MINOR, PATCH
+          IFS=. read MAJOR MINOR PATCH <<<"$BASE"
+
+          # Bump patch and append '-pre<TIMESTAMP>'
+          PATCH=$((PATCH + 1))
+          TS=$(date +%Y%m%d%H%M%S)
+          PRERELEASE_TAG="v${MAJOR}.${MINOR}.${PATCH}-pre${TS}"
+
+          echo "PRERELEASE_TAG=$PRERELEASE_TAG" >> $GITHUB_ENV
+
+      - name: Tag prerelease commit
+        run: |
+          git config --global user.name  "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          if [ "${{ steps.trigger.outputs.by_tag }}" = "true" ]; then
+            SHA="${{ github.sha }}"
+          else
+            git fetch origin main
+            SHA=$(git rev-parse origin/main)
+          fi
+
+          git tag "${{ env.PRERELEASE_TAG }}" $SHA
+          git push origin "${{ env.PRERELEASE_TAG }}"
 
       - name: Install dependencies
         run: |
@@ -86,8 +83,9 @@ jobs:
       - name: Build package
         run: python -m build --verbose
 
-      - name: Upload build artifacts
+      - name: Upload distribution artifact
         uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: libml-dist
           path: dist/
@@ -95,8 +93,9 @@ jobs:
       - name: Create GitHub Pre-release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v${{ env.VERSION }}"
-          name: Pre-release v${{ env.VERSION }}
+          tag_name: ${{ env.PRERELEASE_TAG }}
+          name: Pre-release ${{ env.PRERELEASE_TAG }}
+          draft: false
           prerelease: true
           files: |
             dist/*.whl
