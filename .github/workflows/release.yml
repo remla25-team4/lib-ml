@@ -1,61 +1,104 @@
-name: Verify and Release lib-ml
+name: Verify and Pre-release lib-ml
 
 on:
   push:
+    branches:
+      - main
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+*' # Trigger workflow on version tags
+      - 'v[0-9]+.[0-9]+.[0-9]+*' 
 
 jobs:
-  build-verify-release:
-    name: Build, Verify, and Release lib-ml
+  build-verify-prerelease:
+    name: Build, Verify, and Pre-release lib-ml
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # for pushing tags & creating the prerelease
 
     steps:
-      # Step 1: Check out the repository code
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # Step 2: Set up Python environment
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.13'
 
-      # Step 3: Install dependencies from requirements file
+      - name: Determine trigger type
+        id: trigger
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "by_tag=true"  >> $GITHUB_OUTPUT
+          else
+            echo "by_tag=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Calculate prerelease version
+        run: |
+          # Pick the base tag: pushed tag vs. latest in history
+          if [ "${{ steps.trigger.outputs.by_tag }}" = "true" ]; then
+            BASE_TAG="${{ github.ref_name }}"
+          else
+            BASE_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          fi
+
+          # Strip leading 'v' and drop any '-' suffix (e.g. '-alpha', '-pre', etc)
+          BASE=${BASE_TAG#v}
+          BASE=${BASE%%-*}
+
+          # Split into MAJOR, MINOR, PATCH
+          IFS=. read MAJOR MINOR PATCH <<<"$BASE"
+
+          # Bump patch and append '-pre<TIMESTAMP>'
+          PATCH=$((PATCH + 1))
+          TS=$(date +%Y%m%d%H%M%S)
+          PRERELEASE_TAG="v${MAJOR}.${MINOR}.${PATCH}-pre${TS}"
+
+          echo "PRERELEASE_TAG=$PRERELEASE_TAG" >> $GITHUB_ENV
+
+      - name: Tag prerelease commit
+        run: |
+          git config --global user.name  "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          if [ "${{ steps.trigger.outputs.by_tag }}" = "true" ]; then
+            SHA="${{ github.sha }}"
+          else
+            git fetch origin main
+            SHA=$(git rev-parse origin/main)
+          fi
+
+          git tag "${{ env.PRERELEASE_TAG }}" $SHA
+          git push origin "${{ env.PRERELEASE_TAG }}"
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Step 4: Download NLTK data explicitly
       - name: Download NLTK stopwords
         run: python -m nltk.downloader stopwords
 
-      # Step 5: Build package
       - name: Build package
         run: python -m build --verbose
 
-      # Step 6: Publish distribution to GitHub Packages
-      - name: Upload artifact
+      - name: Upload distribution artifact
         uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: libml-dist
           path: dist/
 
-      # Step 7: Create GitHub Release and attach distribution files from dist/
-      - name: Create GitHub Release
+      - name: Create GitHub Pre-release
         uses: softprops/action-gh-release@v2
-        if: success()
         with:
-          tag_name: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
+          tag_name: ${{ env.PRERELEASE_TAG }}
+          name: Pre-release ${{ env.PRERELEASE_TAG }}
           draft: false
-          prerelease: ${{ contains(github.ref_name, '-') }}
-          body: |
-            Automated release for version ${{ github.ref_name }}
-          # This will upload the .whl and .tar.gz files (if python -m build creates both).
+          prerelease: true
           files: |
             dist/*.whl
             dist/*.tar.gz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
