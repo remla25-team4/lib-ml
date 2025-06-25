@@ -31,10 +31,10 @@ This library is intended to be installed directly from its Git tag using `pip`. 
 To install a specific version (e.g., `v0.1.1`) as a dependency in another component (like `model-training` or `model-service`):
 
 ```bash
-pip install https://github.com/remla25-team4/lib-ml/releases/download/v0.1.1/lib_ml-0.1.1-py3-none-any.whl
+pip install https://github.com/remla25-team4/lib-ml/releases/download/v1.0.0/lib_ml-1.0.0-py3-none-any.whl
 
 # Or
-# lib_ml @ https://github.com/remla25-team4/lib-ml/releases/download/v0.1.1/lib_ml-0.1.1-py3-none-any.whl
+# lib_ml @ https://github.com/remla25-team4/lib-ml/releases/download/v1.0.0/lib_ml-1.0.0-py3-none-any.whl
 # You can add this line to the requirements.txt file of your project.
 # Then run pip install -r requirements.txt to install
 ```
