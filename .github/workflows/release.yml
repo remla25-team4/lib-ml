@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-and-release:
-    name: Build and Release
+    name: Build and Create Stable Release
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout code at tagged commit
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -24,7 +26,7 @@ jobs:
       - name: Install build tools and dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install build # Install the standard 'build' package
+          pip install build
           pip install -r requirements.txt
 
       - name: Download NLTK stopwords
@@ -33,11 +35,11 @@ jobs:
       - name: Build Python package
         run: python -m build --sdist --wheel .
 
-      - name: Create GitHub Release
+      - name: Create GitHub Release and Upload Assets
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          prerelease: ${{ contains(github.ref_name, '-') }}
+          name: Release lib-ml ${{ github.ref_name }}
+          body: "Stable release of the lib-ml package"
+          prerelease: false
           files: dist/*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
